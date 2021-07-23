@@ -8,6 +8,7 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import kotlin.math.atan2
 
 
 class MainActivity : AppCompatActivity() {
@@ -17,31 +18,33 @@ class MainActivity : AppCompatActivity() {
     private var spirituality: Int = 5
     private var career: Int = 5
     private var money: Int = 5
+    // 270, 330, 30, 90, 150, 210
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
 
-        // draw triangle on canvas
-        val bitmap = drawTriangle(
-            sideLength = 650F,
-            yOffsetTopPoint = 150F,
-            xOffsetTopPoint = 750F,
-            xOffsetLeftPoint = 200F,
-            yOffsetBottomHand = 150F,
-            strokeWidth = 20F,
-            strokeColor = Color.parseColor("#191970"),
-            fillColor = Color.parseColor("#D9E650"),
-            canvasColor = Color.parseColor("#F2E8D7")
+        // draw wedge on canvas
+        val familyBitmap = drawWedge(
+            startAngle = 270F,
+            fillColor = Color.parseColor("#D9E650")
         )
 
         // show triangle drawing on image view
-        val pieChart: ImageView = findViewById(R.id.imageView) as ImageView
-        pieChart.setImageBitmap(bitmap)
+        val familyWedge: ImageView = findViewById(R.id.family_wedge)
+        familyWedge.setImageBitmap(familyBitmap)
+
+//        val friendsBitmap = drawWedge(
+//            startAngle = 330F,
+//            fillColor = Color.parseColor("#D9E650")
+//        )
+//
+//        val friendsWedge: ImageView = findViewById(R.id.friends_wedge)
+//        familyWedge.setImageBitmap(friendsBitmap)
 
 
-        val familyTextView: TextView = findViewById(R.id.family_value) as TextView
+        val familyTextView: TextView = findViewById(R.id.family_value)
         familyTextView.text = "$family"
         val familyUpButton = findViewById<Button>(R.id.family_up)
         familyUpButton.setOnClickListener {
@@ -147,26 +150,21 @@ class MainActivity : AppCompatActivity() {
 }
 
 // function to draw triangle on canvas
-fun drawTriangle(
-    sideLength : Float = 600F,
-    yOffsetTopPoint : Float = 100F,
-    xOffsetTopPoint : Float = 600F,
-    xOffsetLeftPoint : Float = 200F,
-    yOffsetBottomHand : Float = 150F,
-    strokeWidth : Float = 15F,
+fun drawWedge(
+    startAngle : Float,
+    strokeWidth : Float = 5F,
     strokeColor : Int = Color.BLACK,
-    fillColor : Int = Color.CYAN,
-    canvasColor : Int = Color.LTGRAY
+    fillColor : Int = Color.CYAN
 ): Bitmap?{
     val bitmap = Bitmap.createBitmap(
-        1500,
+        850,
         850,
         Bitmap.Config.ARGB_8888
     )
 
     // canvas to draw triangle
     val canvas = Canvas(bitmap).apply {
-        drawColor(canvasColor)
+        drawColor(Color.TRANSPARENT)
     }
 
     // paint to draw triangle fill color
@@ -177,20 +175,36 @@ fun drawTriangle(
         style = Paint.Style.FILL
     }
 
+    val radius = 20f
+    val oval = RectF()
+    oval.set(10F, 10F, canvas.width.toFloat() - 10, canvas.height.toFloat() - 10)
+
+    val oval1 = RectF()
+    oval1.set(100F, 100F, canvas.width.toFloat() - 100, canvas.height.toFloat() - 100)
+
     // create a path to draw triangle
     val path = Path().apply {
         fillType = Path.FillType.EVEN_ODD
-        // draw rectangle on canvas
-//        moveTo(xOffsetLeftPoint, canvas.height - yOffsetBottomHand)
-        moveTo(0F, canvas.height.toFloat())
-        lineTo(xOffsetTopPoint, yOffsetTopPoint)
-        lineTo(xOffsetTopPoint  + sideLength, canvas.height - yOffsetBottomHand)
+        moveTo(canvas.width.toFloat() / 2, canvas.height.toFloat() / 2)
+        arcTo(oval, startAngle, 60F, false)
         close()
     }
+
+    val path1 = Path().apply {
+        fillType = Path.FillType.EVEN_ODD
+        moveTo(canvas.width.toFloat() / 2, canvas.height.toFloat() / 2)
+        arcTo(oval1, startAngle + 60, 60F, false)
+        close()
+    }
+
 
     // draw path on canvas
     // it will draw triangle fill color
     canvas.drawPath(path, paint)
+    paint.apply {
+        color = Color.CYAN
+    }
+    canvas.drawPath(path1, paint)
 
     // change paint color to draw triangle border
     paint.apply {
@@ -199,6 +213,7 @@ fun drawTriangle(
     }
     // it will draw triangle border on canvas
     canvas.drawPath(path,paint)
+    canvas.drawPath(path1,paint)
 
     return bitmap
 }
