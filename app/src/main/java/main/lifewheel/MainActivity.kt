@@ -2,218 +2,217 @@ package main.lifewheel
 
 //import android.R
 
+import android.content.res.Configuration
 import android.graphics.*
 import android.os.Bundle
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import kotlin.math.atan2
 
 
 class MainActivity : AppCompatActivity() {
-    private var family: Int = 5
-    private var friends: Int = 5
-    private var love: Int = 5
-    private var spirituality: Int = 5
-    private var career: Int = 5
-    private var money: Int = 5
-    // 270, 330, 30, 90, 150, 210
+    var values = mapOf(
+        Categories.FAMILY to Data(
+            R.id.family_value,
+            R.id.family_up,
+            R.id.family_down,
+            Color.CYAN,
+            "Family"
+        ),
+        Categories.FRIENDS to Data(
+            R.id.friends_value,
+            R.id.friends_up,
+            R.id.friends_down,
+            Color.YELLOW,
+            "Friends"
+        ),
+        Categories.LOVE to Data(
+            R.id.love_value,
+            R.id.love_up,
+            R.id.love_down,
+            Color.MAGENTA,
+            "Love"
+        ),
+        Categories.SPIRITUALITY to Data(
+            R.id.spirituality_value,
+            R.id.spirituality_up,
+            R.id.spirituality_down,
+            Color.RED,
+            "Spirituality"
+        ),
+        Categories.CAREER to Data(
+            R.id.career_value,
+            R.id.career_up,
+            R.id.career_down,
+            Color.BLUE,
+            "Career"
+        ),
+        Categories.MONEY to Data(
+            R.id.money_value,
+            R.id.money_up,
+            R.id.money_down,
+            Color.GREEN,
+            "Money"
+        )
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        // show triangle drawing on image view
+        val pieChart: ImageView = findViewById(R.id.pie_chart)
+        pieChart.setImageBitmap(drawWedges(values))
 
-        // draw wedge on canvas
-        val familyBitmap = drawWedge(
-            startAngle = 270F,
-            fillColor = Color.parseColor("#D9E650")
+        values.forEach { (k, v) ->
+            val textView: TextView = findViewById(v.valueID)
+            textView.text = v.amount.toString()
+            val upButton = findViewById<Button>(v.upID)
+            upButton.setOnClickListener {
+                if (v.amount < 10) {
+                    values.getValue(k).amount++
+                    textView.text = values.getValue(k).amount.toString()
+                    pieChart.setImageBitmap(drawWedges(values))
+                }
+            }
+            val downButton = findViewById<Button>(v.downID)
+            downButton.setOnClickListener {
+                if (v.amount > 1) {
+                    values.getValue(k).amount--
+                    textView.text = values.getValue(k).amount.toString()
+                    pieChart.setImageBitmap(drawWedges(values))
+                }
+            }
+        }
+    }
+
+    private fun isDarkModeOn(): Boolean {
+        val currentNightMode = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
+        return currentNightMode == Configuration.UI_MODE_NIGHT_YES
+    }
+
+
+    // function to draw triangle on canvas
+    fun drawWedges(values: Map<Categories, Data>): Bitmap? {
+        val jumpSize = 40F
+        val startAngle = 270F
+        val bitmap = Bitmap.createBitmap(
+            850,
+            850,
+            Bitmap.Config.ARGB_8888
         )
 
-        // show triangle drawing on image view
-        val familyWedge: ImageView = findViewById(R.id.family_wedge)
-        familyWedge.setImageBitmap(familyBitmap)
-
-//        val friendsBitmap = drawWedge(
-//            startAngle = 330F,
-//            fillColor = Color.parseColor("#D9E650")
-//        )
-//
-//        val friendsWedge: ImageView = findViewById(R.id.friends_wedge)
-//        familyWedge.setImageBitmap(friendsBitmap)
-
-
-        val familyTextView: TextView = findViewById(R.id.family_value)
-        familyTextView.text = "$family"
-        val familyUpButton = findViewById<Button>(R.id.family_up)
-        familyUpButton.setOnClickListener {
-            if (family < 10) {
-                family++
-                familyTextView.text = "$family"
-            }
-        }
-        val familyDownButton = findViewById<Button>(R.id.family_down)
-        familyDownButton.setOnClickListener {
-            if (family > 0) {
-                family--
-                familyTextView.text = "$family"
-            }
+        // canvas to draw triangle
+        val canvas = Canvas(bitmap).apply {
+            drawColor(Color.TRANSPARENT)
         }
 
-        val friendsTextView: TextView = findViewById(R.id.friends_value) as TextView
-        friendsTextView.text = "$family"
-        val friendsUpButton = findViewById<Button>(R.id.friends_up)
-        friendsUpButton.setOnClickListener {
-            if (friends < 10) {
-                friends++
-                friendsTextView.text = "$friends"
-            }
-        }
-        val friendsDownButton = findViewById<Button>(R.id.friends_down)
-        friendsDownButton.setOnClickListener {
-            if (friends > 0) {
-                friends--
-                friendsTextView.text = "$friends"
-            }
+        val ovals = ArrayList<RectF>()
+
+        repeat(10) { index ->
+            val offset = index.toFloat() * jumpSize
+            val oval = RectF()
+            oval.set(
+                offset,
+                offset,
+                canvas.width.toFloat() - offset,
+                canvas.height.toFloat() - offset
+            )
+            ovals.add(oval)
         }
 
-        val loveTextView: TextView = findViewById(R.id.love_value) as TextView
-        loveTextView.text = "$love"
-        val loveUpButton = findViewById<Button>(R.id.love_up)
-        loveUpButton.setOnClickListener {
-            if (love < 10) {
-                love++
-                loveTextView.text = "$love"
+        ovals.reverse()
+
+        values.forEach { (i, v) ->
+            // paint to draw triangle fill color
+            val paint = Paint().apply {
+                isAntiAlias = true
+                color = v.color
+                this.strokeWidth = 3F
+                style = Paint.Style.FILL
+                textSize = 40F
             }
-        }
-        val loveDownButton = findViewById<Button>(R.id.love_down)
-        loveDownButton.setOnClickListener {
-            if (love > 0) {
-                love--
-                loveTextView.text = "$love"
+
+            val path = Path().apply {
+                fillType = Path.FillType.EVEN_ODD
+                moveTo(canvas.width.toFloat() / 2, canvas.height.toFloat() / 2)
+                arcTo(ovals[v.amount - 1], startAngle, 60F, false)
+                close()
             }
+            // it will draw wedge on canvas
+            canvas.drawPath(path, paint)
+            // change paint color to draw border
+
+
+
+            var outlineColor = Color.BLACK
+
+            if (isDarkModeOn()) {
+                outlineColor = Color.WHITE
+                print("hello")
+            }
+
+
+            paint.apply {
+                color = outlineColor
+                style = Paint.Style.STROKE
+            }
+            // it will draw border on canvas
+            canvas.drawPath(path, paint)
+
+
+            canvas.rotate(270F, canvas.width.toFloat() / 2, canvas.height.toFloat() / 2);
+
+            if (v.amount >= 8) {
+                paint.apply {
+                    color = Color.BLACK
+                }
+            }
+
+            val radius =
+                (canvas.height / 2) - ((canvas.height / 2) - (v.amount.coerceAtLeast(5) * jumpSize))
+            val circle = Path()
+            circle.addCircle(
+                (canvas.width / 2).toFloat(),
+                (canvas.height / 2).toFloat(),
+                radius,
+                Path.Direction.CW
+            )
+
+            val textBounds = Rect()
+            paint.getTextBounds(v.label, 0, v.label.length, textBounds)
+            val textWidth = paint.measureText(v.label)
+            val textHeight = textBounds.height().toFloat()
+
+            val circumference = 2 * Math.PI * radius
+            val xOffset = Math.max((((circumference / 6) - textWidth) / 2F).toFloat(), 0F)
+
+            var yOffset = -60F
+            if (v.amount >= 8) {
+                yOffset = 15F
+            }
+
+            canvas.drawTextOnPath(v.label, circle, xOffset, yOffset, paint);
+
+
+            canvas.rotate(-210F, canvas.width.toFloat() / 2, canvas.height.toFloat() / 2);
         }
 
-        val spiritualityTextView: TextView = findViewById(R.id.spirituality_value) as TextView
-        spiritualityTextView.text = "$spirituality"
-        val spiritualityUpButton = findViewById<Button>(R.id.spirituality_up)
-        spiritualityUpButton.setOnClickListener {
-            if (spirituality < 10) {
-                spirituality++
-                spiritualityTextView.text = "$spirituality"
-            }
-        }
-        val spiritualityDownButton = findViewById<Button>(R.id.spirituality_down)
-        spiritualityDownButton.setOnClickListener {
-            if (spirituality > 0) {
-                spirituality--
-                spiritualityTextView.text = "$spirituality"
-            }
-        }
 
-        val careerTextView: TextView = findViewById(R.id.career_value) as TextView
-        careerTextView.text = "$career"
-        val careerUpButton = findViewById<Button>(R.id.career_up)
-        careerUpButton.setOnClickListener {
-            if (career < 10) {
-                career++
-                careerTextView.text = "$career"
-            }
-        }
-        val careerDownButton = findViewById<Button>(R.id.career_down)
-        careerDownButton.setOnClickListener {
-            if (career > 0) {
-                career--
-                careerTextView.text = "$career"
-            }
-        }
-
-        val moneyTextView: TextView = findViewById(R.id.money_value) as TextView
-        moneyTextView.text = "$money"
-        val moneyUpButton = findViewById<Button>(R.id.money_up)
-        moneyUpButton.setOnClickListener {
-            if (money < 10) {
-                money++
-                moneyTextView.text = "$money"
-            }
-        }
-        val moneyDownButton = findViewById<Button>(R.id.money_down)
-        moneyDownButton.setOnClickListener {
-            if (money > 0) {
-                money--
-                moneyTextView.text = "$money"
-            }
-        }
-
+        return bitmap
     }
 }
 
-// function to draw triangle on canvas
-fun drawWedge(
-    startAngle : Float,
-    strokeWidth : Float = 5F,
-    strokeColor : Int = Color.BLACK,
-    fillColor : Int = Color.CYAN
-): Bitmap?{
-    val bitmap = Bitmap.createBitmap(
-        850,
-        850,
-        Bitmap.Config.ARGB_8888
-    )
+enum class Categories {
+    FAMILY, FRIENDS, LOVE, SPIRITUALITY, CAREER, MONEY
+}
 
-    // canvas to draw triangle
-    val canvas = Canvas(bitmap).apply {
-        drawColor(Color.TRANSPARENT)
-    }
-
-    // paint to draw triangle fill color
-    val paint = Paint().apply {
-        isAntiAlias = true
-        color = fillColor
-        this.strokeWidth = strokeWidth
-        style = Paint.Style.FILL
-    }
-
-    val radius = 20f
-    val oval = RectF()
-    oval.set(10F, 10F, canvas.width.toFloat() - 10, canvas.height.toFloat() - 10)
-
-    val oval1 = RectF()
-    oval1.set(100F, 100F, canvas.width.toFloat() - 100, canvas.height.toFloat() - 100)
-
-    // create a path to draw triangle
-    val path = Path().apply {
-        fillType = Path.FillType.EVEN_ODD
-        moveTo(canvas.width.toFloat() / 2, canvas.height.toFloat() / 2)
-        arcTo(oval, startAngle, 60F, false)
-        close()
-    }
-
-    val path1 = Path().apply {
-        fillType = Path.FillType.EVEN_ODD
-        moveTo(canvas.width.toFloat() / 2, canvas.height.toFloat() / 2)
-        arcTo(oval1, startAngle + 60, 60F, false)
-        close()
-    }
-
-
-    // draw path on canvas
-    // it will draw triangle fill color
-    canvas.drawPath(path, paint)
-    paint.apply {
-        color = Color.CYAN
-    }
-    canvas.drawPath(path1, paint)
-
-    // change paint color to draw triangle border
-    paint.apply {
-        color = strokeColor
-        style = Paint.Style.STROKE
-    }
-    // it will draw triangle border on canvas
-    canvas.drawPath(path,paint)
-    canvas.drawPath(path1,paint)
-
-    return bitmap
+class Data(valueID: Int, upID: Int, downID: Int, color: Int, label: String) {
+    val valueID: Int = valueID
+    val upID: Int = upID
+    val downID: Int = downID
+    var amount: Int = 5
+    var color: Int = color
+    var label: String = label
 }
